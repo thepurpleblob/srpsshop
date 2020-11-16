@@ -490,7 +490,9 @@ function wsa_init_woocommerce_sagepay_4()
 
             // TODO: Bodge... we don't want this
             $product_item['BillingState'] = '';
+            $product_item['DeliveryState'] = '';
             
+
             $product_item['VPSProtocol'] = "4.00";
             $product_item['TxType'] = $this->transtype;
             $product_item['Vendor'] = $this->vendor_name;
