@@ -519,7 +519,7 @@ function wsa_init_woocommerce_sagepay_4()
             $product_item['BrowserScreenWidth'] = '300';
             $product_item['BrowserTZ'] = '-3180';
             $product_item['ChallengeWindowSize'] = '05';
-            $product_item['Apply3DSecure'] = 3;
+            $product_item['Apply3DSecure'] = 0; // TODO - make this an option somewhere
 
             $post_values = "";
             foreach ($product_item as $key => $value) {
