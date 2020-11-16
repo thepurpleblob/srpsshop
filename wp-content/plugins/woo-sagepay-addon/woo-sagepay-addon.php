@@ -487,6 +487,10 @@ function wsa_init_woocommerce_sagepay_4()
                 $product_item['DeliveryPhone'] = $order->get_billing_phone();
                 $product_item['CustomerEMail'] = $order->get_billing_email();
             }
+
+            // TODO: Bodge... we don't want this
+            $product_item['BillingState'] = '';
+            
             $product_item['VPSProtocol'] = "4.00";
             $product_item['TxType'] = $this->transtype;
             $product_item['Vendor'] = $this->vendor_name;
@@ -519,7 +523,7 @@ function wsa_init_woocommerce_sagepay_4()
             $product_item['BrowserScreenWidth'] = '300';
             $product_item['BrowserTZ'] = '-3180';
             $product_item['ChallengeWindowSize'] = '05';
-            $product_item['Apply3DSecure'] = 0; // TODO - make this an option somewhere
+            $product_item['Apply3DSecure'] = 0; // TODO - make this an option somewherefbu
 
             $post_values = "";
             foreach ($product_item as $key => $value) {
