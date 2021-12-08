@@ -1,10 +1,7 @@
 /**
  * External dependencies
  */
-import {
-	HAS_DARK_EDITOR_STYLE_SUPPORT,
-	CHECKOUT_ALLOWS_SIGNUP,
-} from '@woocommerce/block-settings';
+import { getSetting } from '@woocommerce/settings';
 
 const blockAttributes = {
 	isPreview: {
@@ -22,7 +19,7 @@ const blockAttributes = {
 	},
 	allowCreateAccount: {
 		type: 'boolean',
-		default: CHECKOUT_ALLOWS_SIGNUP,
+		default: false,
 	},
 	showApartmentField: {
 		type: 'boolean',
@@ -54,7 +51,11 @@ const blockAttributes = {
 	},
 	hasDarkControls: {
 		type: 'boolean',
-		default: HAS_DARK_EDITOR_STYLE_SUPPORT,
+		default: getSetting( 'hasDarkEditorStyleSupport', false ),
+	},
+	showRateAfterTaxName: {
+		type: 'boolean',
+		default: getSetting( 'displayCartPricesIncludingTax', false ),
 	},
 };
 

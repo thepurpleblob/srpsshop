@@ -3,8 +3,8 @@ Contributors: DavidAnderson, TerraFrost, pmbaldha
 Donate link: https://sourceforge.net/donate/index.php?group_id=198487
 Tags: ssh, sftp
 Requires at least: 3.1
-Tested up to: 5.5
-Stable tag: 0.8.2
+Tested up to: 5.8
+Stable tag: 0.8.4
 
 "SSH SFTP Updater Support" is the easiest way to keep your Wordpress installation up-to-date with SFTP.
 
@@ -23,8 +23,6 @@ This plugin is offered and maintained as a free service to the WP community. You
 * **[UpdraftPlus](https://updraftplus.com/?ref=212&source=sshsmtp)** simplifies backups and restoration. It is the #1 most-used backup/restore plugin, with over a million currently-active installs.
 * **[UpdraftCentral](https://updraftplus.com/updraftcentral/?ref=212&source=sshsmtp)** - a highly efficient way to manage, optimize, update and backup multiple websites from one place.
 * **[WP-Optimize](https://getwpo.com/)** helps you to optimize and clean your WordPress database so that it runs at maximum efficiency.
-* **[Keyy](https://getkeyy.com/)**: Simple and secure logins with a wave of your phone.
-* **[MetaSlider](https://www.metaslider.com)**: Easily create beautifully-designed sliders with the #1-most installed WP slider plugin.
 * **More quality plugins**: **[Premium WooCommerce extensions](https://www.simbahosting.co.uk/s3/shop/)** | **[Other useful plugins](https://profiles.wordpress.org/davidanderson#content-plugins)**
 
 == Installation ==
@@ -40,6 +38,16 @@ a) `define('FS_METHOD', 'ssh2');`
 b) Others as <a href="https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants">detailed in the official WP codex</a>
 
 == Changelog ==
+
+= 0.8.4 - 2020/Dec/30 =
+
+* TWEAK: Remove obsolete references to other plugins
+* TWEAK: Replace some further deprecated jQuery styles
+* TWEAK: Update to latest 1.0.x version of phpseclib
+
+= 0.8.3 - 2020/Dec/19 =
+
+* TWEAK: Replace deprecated jQuery style
 
 = 0.8.2 - 2019/Jun/22 =
 
@@ -116,4 +124,4 @@ b) Others as <a href="https://codex.wordpress.org/Editing_wp-config.php#WordPres
 * Initial Release
 
 == Upgrade Notice ==
-* 0.8.2 : Make the FTP_* constants apply
+* 0.8.4 : Remove obsolete references to other plugins

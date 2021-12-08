@@ -12,18 +12,18 @@ import {
 	Notice,
 } from '@wordpress/components';
 import PropTypes from 'prop-types';
+import { CartCheckoutCompatibilityNotice } from '@woocommerce/editor-components/compatibility-notices';
 import ViewSwitcher from '@woocommerce/editor-components/view-switcher';
 import PageSelector from '@woocommerce/editor-components/page-selector';
-import { SHIPPING_ENABLED, CART_PAGE_ID } from '@woocommerce/block-settings';
+import { CART_PAGE_ID } from '@woocommerce/block-settings';
 import BlockErrorBoundary from '@woocommerce/base-components/block-error-boundary';
 import {
 	EditorProvider,
 	useEditorContext,
 	CartProvider,
 } from '@woocommerce/base-context';
-import { createInterpolateElement } from 'wordpress-element';
-import { useRef } from '@wordpress/element';
-import { getAdminLink } from '@woocommerce/settings';
+import { createInterpolateElement, useRef } from '@wordpress/element';
+import { getAdminLink, getSetting } from '@woocommerce/settings';
 import { previewCart } from '@woocommerce/resource-previews';
 
 /**
@@ -36,9 +36,9 @@ import './editor.scss';
 const BlockSettings = ( { attributes, setAttributes } ) => {
 	const {
 		isShippingCalculatorEnabled,
-		isShippingCostHidden,
 		checkoutPageId,
 		hasDarkControls,
+		showRateAfterTaxName,
 	} = attributes;
 	const { currentPostId } = useEditorContext();
 	const { current: savedCheckoutPageId } = useRef( checkoutPageId );
@@ -70,7 +70,7 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 					) }
 				</Notice>
 			) }
-			{ SHIPPING_ENABLED && (
+			{ getSetting( 'shippingEnabled', true ) && (
 				<PanelBody
 					title={ __(
 						'Shipping rates',
@@ -93,24 +93,32 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 							} )
 						}
 					/>
-					<ToggleControl
-						label={ __(
-							'Hide shipping costs until an address is entered',
-							'woocommerce'
-						) }
-						help={ __(
-							'If checked, shipping rates will be hidden until the customer uses the shipping calculator or enters their address during checkout.',
-							'woocommerce'
-						) }
-						checked={ isShippingCostHidden }
-						onChange={ () =>
-							setAttributes( {
-								isShippingCostHidden: ! isShippingCostHidden,
-							} )
-						}
-					/>
 				</PanelBody>
 			) }
+			{ getSetting( 'taxesEnabled' ) &&
+				getSetting( 'displayItemizedTaxes', false ) &&
+				! getSetting( 'displayCartPricesIncludingTax', false ) && (
+					<PanelBody
+						title={ __( 'Taxes', 'woocommerce' ) }
+					>
+						<ToggleControl
+							label={ __(
+								'Show rate after tax name',
+								'woocommerce'
+							) }
+							help={ __(
+								'Show the percentage rate alongside each tax line in the summary.',
+								'woocommerce'
+							) }
+							checked={ showRateAfterTaxName }
+							onChange={ () =>
+								setAttributes( {
+									showRateAfterTaxName: ! showRateAfterTaxName,
+								} )
+							}
+						/>
+					</PanelBody>
+				) }
 			{ ! (
 				currentPostId === CART_PAGE_ID && savedCheckoutPageId === 0
 			) && (
@@ -226,6 +234,7 @@ const CartEditor = ( { className, attributes, setAttributes } ) => {
 					</BlockErrorBoundary>
 				) }
 			/>
+			<CartCheckoutCompatibilityNotice blockName="cart" />
 		</div>
 	);
 };

@@ -204,12 +204,6 @@ class Controller extends ReportsController implements ExportableInterface {
 					'context'     => array( 'view', 'edit' ),
 					'description' => __( 'File URL.', 'woocommerce' ),
 				),
-				'product_id'   => array(
-					'type'        => 'integer',
-					'readonly'    => true,
-					'context'     => array( 'view', 'edit' ),
-					'description' => __( 'Product ID.', 'woocommerce' ),
-				),
 				'order_id'     => array(
 					'type'        => 'integer',
 					'readonly'    => true,
@@ -395,8 +389,8 @@ class Controller extends ReportsController implements ExportableInterface {
 	public function get_export_columns() {
 		$export_columns = array(
 			'date'         => __( 'Date', 'woocommerce' ),
-			'product'      => __( 'Product Title', 'woocommerce' ),
-			'file_name'    => __( 'File Name', 'woocommerce' ),
+			'product'      => __( 'Product title', 'woocommerce' ),
+			'file_name'    => __( 'File name', 'woocommerce' ),
 			'order_number' => __( 'Order #', 'woocommerce' ),
 			'user_id'      => __( 'User Name', 'woocommerce' ),
 			'ip_address'   => __( 'IP', 'woocommerce' ),
@@ -421,7 +415,7 @@ class Controller extends ReportsController implements ExportableInterface {
 	 * @return array Key value pair of Column ID => Row Value.
 	 */
 	public function prepare_item_for_export( $item ) {
-		$export_columns = array(
+		$export_item = array(
 			'date'         => $item['date'],
 			'product'      => $item['_embedded']['product'][0]['name'],
 			'file_name'    => $item['file_name'],

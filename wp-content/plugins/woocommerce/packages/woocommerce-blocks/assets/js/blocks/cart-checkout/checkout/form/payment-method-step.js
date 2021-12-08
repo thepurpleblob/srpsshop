@@ -3,19 +3,21 @@
  */
 import { __ } from '@wordpress/i18n';
 import { FormStep } from '@woocommerce/base-components/cart-checkout';
+import { StoreNoticesProvider } from '@woocommerce/base-context';
 import {
-	useCheckoutContext,
-	StoreNoticesProvider,
-} from '@woocommerce/base-context';
-import {
+	useStoreCart,
 	useEmitResponse,
 	usePaymentMethods,
-	useStoreCart,
-} from '@woocommerce/base-hooks';
-import { PaymentMethods } from '@woocommerce/base-components/payment-methods';
+	useCheckoutSubmit,
+} from '@woocommerce/base-context/hooks';
+
+/**
+ * Internal dependencies
+ */
+import { PaymentMethods } from '../../payment-methods';
 
 const PaymentMethodStep = () => {
-	const { isProcessing: checkoutIsProcessing } = useCheckoutContext();
+	const { isDisabled } = useCheckoutSubmit();
 	const { cartNeedsPayment } = useStoreCart();
 	const { paymentMethods } = usePaymentMethods();
 	const { noticeContexts } = useEmitResponse();
@@ -27,7 +29,7 @@ const PaymentMethodStep = () => {
 	return (
 		<FormStep
 			id="payment-method"
-			disabled={ checkoutIsProcessing }
+			disabled={ isDisabled }
 			className="wc-block-checkout__payment-method"
 			title={ __( 'Payment method', 'woocommerce' ) }
 			description={

@@ -8,8 +8,10 @@
  */
 
 use \Automattic\WooCommerce\Admin\Install as Installer;
-use \Automattic\WooCommerce\Admin\Notes\WC_Admin_Notes;
-use \Automattic\WooCommerce\Admin\Notes\WC_Admin_Notes_Deactivate_Plugin;
+use \Automattic\WooCommerce\Admin\Notes\Notes;
+use \Automattic\WooCommerce\Admin\Notes\UnsecuredReportFiles;
+use \Automattic\WooCommerce\Admin\Notes\DeactivatePlugin;
+use \Automattic\WooCommerce\Admin\ReportExporter;
 
 /**
  * Update order stats `status` index length.
@@ -68,8 +70,8 @@ function wc_admin_update_0230_db_version() {
  * Remove the note unsnoozing scheduled action.
  */
 function wc_admin_update_0251_remove_unsnooze_action() {
-	as_unschedule_action( WC_Admin_Notes::UNSNOOZE_HOOK, null, 'wc-admin-data' );
-	as_unschedule_action( WC_Admin_Notes::UNSNOOZE_HOOK, null, 'wc-admin-notes' );
+	as_unschedule_action( Notes::UNSNOOZE_HOOK, null, 'wc-admin-data' );
+	as_unschedule_action( Notes::UNSNOOZE_HOOK, null, 'wc-admin-notes' );
 }
 
 /**
@@ -83,7 +85,7 @@ function wc_admin_update_0251_db_version() {
  * Remove Facebook Extension note.
  */
 function wc_admin_update_110_remove_facebook_note() {
-	WC_Admin_Notes::delete_notes_with_name( 'wc-admin-facebook-extension' );
+	Notes::delete_notes_with_name( 'wc-admin-facebook-extension' );
 }
 
 /**
@@ -115,7 +117,7 @@ function wc_admin_update_130_db_version() {
 function wc_admin_update_140_change_deactivate_plugin_note_type() {
 	global $wpdb;
 
-	$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}wc_admin_notes SET type = 'info' WHERE name = %s", WC_Admin_Notes_Deactivate_Plugin::NOTE_NAME ) );
+	$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->prefix}wc_admin_notes SET type = 'info' WHERE name = %s", DeactivatePlugin::NOTE_NAME ) );
 }
 
 /**
@@ -129,7 +131,7 @@ function wc_admin_update_140_db_version() {
  * Remove Facebook Experts note.
  */
 function wc_admin_update_160_remove_facebook_note() {
-	WC_Admin_Notes::delete_notes_with_name( 'wc-admin-facebook-marketing-expert' );
+	Notes::delete_notes_with_name( 'wc-admin-facebook-marketing-expert' );
 }
 
 /**
@@ -137,4 +139,136 @@ function wc_admin_update_160_remove_facebook_note() {
  */
 function wc_admin_update_160_db_version() {
 	Installer::update_db_version( '1.6.0' );
+}
+
+/**
+ * Set "two column" homescreen layout as default for existing stores.
+ */
+function wc_admin_update_170_homescreen_layout() {
+	add_option( 'woocommerce_default_homepage_layout', 'two_columns', '', 'no' );
+}
+
+/**
+ * Update DB Version.
+ */
+function wc_admin_update_170_db_version() {
+	Installer::update_db_version( '1.7.0' );
+}
+
+/**
+ * Delete the preexisting export files.
+ */
+function wc_admin_update_270_delete_report_downloads() {
+	$upload_dir = wp_upload_dir();
+	$base_dir   = trailingslashit( $upload_dir['basedir'] );
+
+	$failed_files   = array();
+	$exports_status = get_option( ReportExporter::EXPORT_STATUS_OPTION, array() );
+	$has_failure    = false;
+
+	if ( ! is_array( $exports_status ) ) {
+		// This is essentially the same path as files failing deletion. Handle as such.
+		return;
+	}
+
+	// Delete all export files based on the status option values.
+	foreach ( $exports_status as $key => $progress ) {
+		list( $report_type, $export_id ) = explode( ':', $key );
+
+		if ( ! $export_id ) {
+			continue;
+		}
+
+		$file   = "{$base_dir}wc-{$report_type}-report-export-{$export_id}.csv";
+		$header = $file . '.headers';
+
+		// phpcs:ignore
+		if ( @file_exists( $file ) && false === @unlink( $file ) ) {
+			array_push( $failed_files, $file );
+		}
+
+		// phpcs:ignore
+		if ( @file_exists( $header ) && false === @unlink( $header ) ) {
+			array_push( $failed_files, $header );
+		}
+	}
+
+	// If the status option was missing or corrupt, there will be files left over.
+	$potential_exports = glob( $base_dir . 'wc-*-report-export-*.csv' );
+	$reports_pattern   = '(revenue|products|variations|orders|categories|coupons|taxes|stock|customers|downloads)';
+
+	/**
+	 * Look for files we can be reasonably sure were created by the report export.
+	 *
+	 * Export files we created will match the 'wc-*-report-export-*.csv' glob, with
+	 * the first wildcard being one of the exportable report slugs, and the second
+	 * being an integer with 11-14 digits (from microtime()'s output) that represents
+	 * a time in the past.
+	 */
+	foreach ( $potential_exports as $potential_export ) {
+		$matches = array();
+		// See if the filename matches an unfiltered export pattern.
+		if ( ! preg_match( "/wc-{$reports_pattern}-report-export-(?P<export_id>\d{11,14})\.csv\$/", $potential_export, $matches ) ) {
+			$has_failure = true;
+			continue;
+		}
+
+		// Validate the timestamp (anything in the past).
+		$timestamp = (int) substr( $matches['export_id'], 0, 10 );
+
+		if ( ! $timestamp || $timestamp > time() ) {
+			$has_failure = true;
+			continue;
+		}
+
+		// phpcs:ignore
+		if ( false === @unlink( $potential_export ) ) {
+			array_push( $failed_files, $potential_export );
+		}
+	}
+
+	// Try deleting failed files once more.
+	foreach ( $failed_files as $failed_file ) {
+		// phpcs:ignore
+		if ( false === @unlink( $failed_file ) ) {
+			$has_failure = true;
+		}
+	}
+
+	if ( $has_failure ) {
+		UnsecuredReportFiles::possibly_add_note();
+	}
+}
+
+/**
+ * Update DB Version.
+ */
+function wc_admin_update_270_db_version() {
+	Installer::update_db_version( '2.7.0' );
+}
+
+/**
+ * Update the old task list options.
+ */
+function wc_admin_update_271_update_task_list_options() {
+	$hidden_lists         = get_option( 'woocommerce_task_list_hidden_lists', array() );
+	$setup_list_hidden    = get_option( 'woocommerce_task_list_hidden', 'no' );
+	$extended_list_hidden = get_option( 'woocommerce_extended_task_list_hidden', 'no' );
+	if ( 'yes' === $setup_list_hidden ) {
+		$hidden_lists[] = 'setup';
+	}
+	if ( 'yes' === $extended_list_hidden ) {
+		$hidden_lists[] = 'extended';
+	}
+
+	update_option( 'woocommerce_task_list_hidden_lists', array_unique( $hidden_lists ) );
+	delete_option( 'woocommerce_task_list_hidden' );
+	delete_option( 'woocommerce_extended_task_list_hidden' );
+}
+
+/**
+ * Update DB Version.
+ */
+function wc_admin_update_271_db_version() {
+	Installer::update_db_version( '2.7.1' );
 }

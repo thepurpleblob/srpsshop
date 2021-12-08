@@ -286,7 +286,7 @@ class WC_Product_Variation extends WC_Product_Simple {
 	/**
 	 * Returns the tax class.
 	 *
-	 * Does not use get_prop so it can handle 'parent' Inheritance correctly.
+	 * Does not use get_prop so it can handle 'parent' inheritance correctly.
 	 *
 	 * @param  string $context view, edit, or unfiltered.
 	 * @return string
@@ -582,22 +582,5 @@ class WC_Product_Variation extends WC_Product_Simple {
 		$valid_classes[] = 'parent';
 
 		return $valid_classes;
-	}
-
-	/**
-	 * Delete variation, set the ID to 0, and return result.
-	 *
-	 * @since  4.4.0
-	 * @param  bool $force_delete Should the variation be deleted permanently.
-	 * @return bool result
-	 */
-	public function delete( $force_delete = false ) {
-		$variation_id = $this->get_id();
-
-		if ( ! parent::delete( $force_delete ) ) {
-			return false;
-		}
-
-		return true;
 	}
 }

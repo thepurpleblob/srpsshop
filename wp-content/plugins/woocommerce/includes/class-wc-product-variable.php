@@ -135,7 +135,7 @@ class WC_Product_Variable extends WC_Product {
 	 * Note: Variable prices do not show suffixes like other product types. This
 	 * is due to some things like tax classes being set at variation level which
 	 * could differ from the parent price. The only way to show accurate prices
-	 * would be to load the variation and get IT's price, which adds extra
+	 * would be to load the variation and get it's price, which adds extra
 	 * overhead and still has edge cases where the values would be inaccurate.
 	 *
 	 * Additionally, ranges of prices no longer show 'striked out' sale prices
@@ -413,7 +413,7 @@ class WC_Product_Variable extends WC_Product {
 	 * Sets an array of children for the product.
 	 *
 	 * @since 3.0.0
-	 * @param array $children Childre products.
+	 * @param array $children Children products.
 	 */
 	public function set_children( $children ) {
 		$this->children = array_filter( wp_parse_id_list( (array) $children ) );
@@ -449,47 +449,31 @@ class WC_Product_Variable extends WC_Product {
 	}
 
 	/**
-	 * Save data (either create or update depending on if we are working on an existing product).
+	 * Do any extra processing needed before the actual product save
+	 * (but after triggering the 'woocommerce_before_..._object_save' action)
 	 *
-	 * @since 3.0.0
+	 * @return mixed A state value that will be passed to after_data_store_save_or_update.
 	 */
-	public function save() {
-		$this->validate_props();
-
-		if ( ! $this->data_store ) {
-			return $this->get_id();
-		}
-
-		/**
-		 * Trigger action before saving to the DB. Allows you to adjust object props before save.
-		 *
-		 * @param WC_Data          $this The object being saved.
-		 * @param WC_Data_Store_WP $data_store THe data store persisting the data.
-		 */
-		do_action( 'woocommerce_before_' . $this->object_type . '_object_save', $this, $this->data_store );
-
+	protected function before_data_store_save_or_update() {
 		// Get names before save.
 		$previous_name = $this->data['name'];
 		$new_name      = $this->get_name( 'edit' );
 
-		if ( $this->get_id() ) {
-			$this->data_store->update( $this );
-		} else {
-			$this->data_store->create( $this );
-		}
+		return array(
+			'previous_name' => $previous_name,
+			'new_name'      => $new_name,
+		);
+	}
 
-		$this->data_store->sync_variation_names( $this, $previous_name, $new_name );
+	/**
+	 * Do any extra processing needed after the actual product save
+	 * (but before triggering the 'woocommerce_after_..._object_save' action)
+	 *
+	 * @param mixed $state The state object that was returned by before_data_store_save_or_update.
+	 */
+	protected function after_data_store_save_or_update( $state ) {
+		$this->data_store->sync_variation_names( $this, $state['previous_name'], $state['new_name'] );
 		$this->data_store->sync_managed_variation_stock_status( $this );
-
-		/**
-		 * Trigger action after saving to the DB.
-		 *
-		 * @param WC_Data          $this The object being saved.
-		 * @param WC_Data_Store_WP $data_store THe data store persisting the data.
-		 */
-		do_action( 'woocommerce_after_' . $this->object_type . '_object_save', $this, $this->data_store );
-
-		return $this->get_id();
 	}
 
 	/*
@@ -590,7 +574,7 @@ class WC_Product_Variable extends WC_Product {
 	 * @return boolean
 	 */
 	public function has_options() {
-		return true;
+		return apply_filters( 'woocommerce_product_has_options', true, $this );
 	}
 
 
@@ -662,9 +646,9 @@ class WC_Product_Variable extends WC_Product {
 	}
 
 	/**
-	 * Sort an associativate array of $variation_id => $price pairs in order of min and max prices.
+	 * Sort an associative array of $variation_id => $price pairs in order of min and max prices.
 	 *
-	 * @param array $prices Associativate array of $variation_id => $price pairs.
+	 * @param array $prices associative array of $variation_id => $price pairs.
 	 * @return array
 	 */
 	protected function sort_variation_prices( $prices ) {

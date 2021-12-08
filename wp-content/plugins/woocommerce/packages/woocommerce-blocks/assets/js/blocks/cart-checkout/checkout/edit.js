@@ -3,7 +3,6 @@
  */
 import classnames from 'classnames';
 import { __ } from '@wordpress/i18n';
-import { CartCheckoutFeedbackPrompt } from '@woocommerce/editor-components/feedback-prompt';
 import { InspectorControls } from '@wordpress/block-editor';
 import {
 	PanelBody,
@@ -17,17 +16,18 @@ import {
 	PRIVACY_URL,
 	TERMS_URL,
 	CHECKOUT_PAGE_ID,
-	isExperimentalBuild,
 } from '@woocommerce/block-settings';
-import { getAdminLink } from '@woocommerce/settings';
-import { createInterpolateElement } from 'wordpress-element';
-import { useRef } from '@wordpress/element';
+import { isWcVersion, getAdminLink, getSetting } from '@woocommerce/settings';
+import { createInterpolateElement, useRef } from '@wordpress/element';
 import {
 	EditorProvider,
 	useEditorContext,
 	StoreNoticesProvider,
+	CheckoutProvider,
 } from '@woocommerce/base-context';
+import { CartCheckoutFeedbackPrompt } from '@woocommerce/editor-components/feedback-prompt';
 import PageSelector from '@woocommerce/editor-components/page-selector';
+import { CartCheckoutCompatibilityNotice } from '@woocommerce/editor-components/compatibility-notices';
 import {
 	previewCart,
 	previewSavedPaymentMethods,
@@ -52,9 +52,18 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 		showReturnToCart,
 		cartPageId,
 		hasDarkControls,
+		showRateAfterTaxName,
 	} = attributes;
 	const { currentPostId } = useEditorContext();
 	const { current: savedCartPageId } = useRef( cartPageId );
+	// Checkout signup is feature gated to WooCommerce 4.7 and newer;
+	// uses updated my-account/lost-password screen from 4.7+ for
+	// setting initial password.
+	// Also implicitly gated to feature plugin, because Checkout
+	// block is gated to plugin
+	const showCreateAccountOption =
+		getSetting( 'checkoutAllowsSignup', false ) &&
+		isWcVersion( '4.7.0', '>=' );
 	return (
 		<InspectorControls>
 			{ currentPostId !== CHECKOUT_PAGE_ID && (
@@ -156,7 +165,7 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 					/>
 				) }
 			</PanelBody>
-			{ isExperimentalBuild() && (
+			{ showCreateAccountOption && (
 				<PanelBody
 					title={ __(
 						'Account options',
@@ -165,7 +174,7 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 				>
 					<ToggleControl
 						label={ __(
-							'Allow shopper to sign up for a user account during checkout',
+							'Allow shoppers to sign up for a user account during checkout',
 							'woocommerce'
 						) }
 						checked={ allowCreateAccount }
@@ -188,7 +197,7 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 				</p>
 				<ToggleControl
 					label={ __(
-						'Allow customers to optionally add order notes',
+						'Allow shoppers to optionally add order notes',
 						'woocommerce'
 					) }
 					checked={ showOrderNotes }
@@ -290,6 +299,30 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 						} }
 					/>
 				) }
+			{ getSetting( 'taxesEnabled' ) &&
+				getSetting( 'displayItemizedTaxes', false ) &&
+				! getSetting( 'displayCartPricesIncludingTax', false ) && (
+					<PanelBody
+						title={ __( 'Taxes', 'woocommerce' ) }
+					>
+						<ToggleControl
+							label={ __(
+								'Show rate after tax name',
+								'woocommerce'
+							) }
+							help={ __(
+								'Show the percentage rate alongside each tax line in the summary.',
+								'woocommerce'
+							) }
+							checked={ showRateAfterTaxName }
+							onChange={ () =>
+								setAttributes( {
+									showRateAfterTaxName: ! showRateAfterTaxName,
+								} )
+							}
+						/>
+					</PanelBody>
+				) }
 			<PanelBody title={ __( 'Style', 'woocommerce' ) }>
 				<ToggleControl
 					label={ __(
@@ -316,45 +349,50 @@ const BlockSettings = ( { attributes, setAttributes } ) => {
 const CheckoutEditor = ( { attributes, setAttributes } ) => {
 	const { className, isPreview } = attributes;
 	return (
-		<EditorProvider
-			previewData={ { previewCart, previewSavedPaymentMethods } }
-		>
-			<div
-				className={ classnames(
-					className,
-					'wp-block-woocommerce-checkout',
-					{
-						'is-editor-preview': isPreview,
-					}
-				) }
+		<>
+			<EditorProvider
+				previewData={ { previewCart, previewSavedPaymentMethods } }
 			>
-				<BlockSettings
-					attributes={ attributes }
-					setAttributes={ setAttributes }
-				/>
-				<BlockErrorBoundary
-					header={ __(
-						'Checkout Block Error',
-						'woocommerce'
-					) }
-					text={ __(
-						'There was an error whilst rendering the checkout block. If this problem continues, try re-creating the block.',
-						'woocommerce'
-					) }
-					showErrorMessage={ true }
-					errorMessagePrefix={ __(
-						'Error message:',
-						'woocommerce'
+				<div
+					className={ classnames(
+						className,
+						'wp-block-woocommerce-checkout',
+						{
+							'is-editor-preview': isPreview,
+						}
 					) }
 				>
-					<StoreNoticesProvider context="wc/checkout">
-						<Disabled>
-							<Block attributes={ attributes } />
-						</Disabled>
-					</StoreNoticesProvider>
-				</BlockErrorBoundary>
-			</div>
-		</EditorProvider>
+					<BlockSettings
+						attributes={ attributes }
+						setAttributes={ setAttributes }
+					/>
+					<BlockErrorBoundary
+						header={ __(
+							'Checkout Block Error',
+							'woocommerce'
+						) }
+						text={ __(
+							'There was an error whilst rendering the checkout block. If this problem continues, try re-creating the block.',
+							'woocommerce'
+						) }
+						showErrorMessage={ true }
+						errorMessagePrefix={ __(
+							'Error message:',
+							'woocommerce'
+						) }
+					>
+						<StoreNoticesProvider context="wc/checkout">
+							<Disabled>
+								<CheckoutProvider>
+									<Block attributes={ attributes } />
+								</CheckoutProvider>
+							</Disabled>
+						</StoreNoticesProvider>
+					</BlockErrorBoundary>
+				</div>
+			</EditorProvider>
+			<CartCheckoutCompatibilityNotice blockName="checkout" />
+		</>
 	);
 };
 

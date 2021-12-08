@@ -2,6 +2,8 @@
 namespace Automattic\WooCommerce\Blocks\StoreApi\Schemas;
 
 use Automattic\WooCommerce\Blocks\Payments\PaymentResult;
+use Automattic\WooCommerce\Blocks\Domain\Services\ExtendRestApi;
+
 
 /**
  * CheckoutSchema class.
@@ -15,6 +17,13 @@ class CheckoutSchema extends AbstractSchema {
 	 * @var string
 	 */
 	protected $title = 'checkout';
+
+	/**
+	 * The schema item identifier.
+	 *
+	 * @var string
+	 */
+	const IDENTIFIER = 'checkout';
 
 	/**
 	 * Billing address schema instance.
@@ -33,12 +42,14 @@ class CheckoutSchema extends AbstractSchema {
 	/**
 	 * Constructor.
 	 *
+	 * @param ExtendRestApi         $extend Rest Extending instance.
 	 * @param BillingAddressSchema  $billing_address_schema Billing address schema instance.
 	 * @param ShippingAddressSchema $shipping_address_schema Shipping address schema instance.
 	 */
-	public function __construct( BillingAddressSchema $billing_address_schema, ShippingAddressSchema $shipping_address_schema ) {
+	public function __construct( ExtendRestApi $extend, BillingAddressSchema $billing_address_schema, ShippingAddressSchema $shipping_address_schema ) {
 		$this->billing_address_schema  = $billing_address_schema;
 		$this->shipping_address_schema = $shipping_address_schema;
+		parent::__construct( $extend );
 	}
 
 	/**
@@ -48,58 +59,69 @@ class CheckoutSchema extends AbstractSchema {
 	 */
 	public function get_properties() {
 		return [
-			'order_id'         => [
+			'order_id'          => [
 				'description' => __( 'The order ID to process during checkout.', 'woocommerce' ),
 				'type'        => 'integer',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => true,
 			],
-			'status'           => [
+			'status'            => [
 				'description' => __( 'Order status. Payment providers will update this value after payment.', 'woocommerce' ),
 				'type'        => 'string',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => true,
 			],
-			'order_key'        => [
+			'order_key'         => [
 				'description' => __( 'Order key used to check validity or protect access to certain order data.', 'woocommerce' ),
 				'type'        => 'string',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => true,
 			],
-			'customer_note'    => [
+			'customer_note'     => [
 				'description' => __( 'Note added to the order by the customer during checkout.', 'woocommerce' ),
 				'type'        => 'string',
 				'context'     => [ 'view', 'edit' ],
 			],
-			'customer_id'      => [
+			'customer_id'       => [
 				'description' => __( 'Customer ID if registered. Will return 0 for guests.', 'woocommerce' ),
 				'type'        => 'integer',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => true,
 			],
-			'billing_address'  => [
+			'billing_address'   => [
 				'description' => __( 'Billing address.', 'woocommerce' ),
 				'type'        => 'object',
 				'context'     => [ 'view', 'edit' ],
 				'properties'  => $this->billing_address_schema->get_properties(),
+				'arg_options' => [
+					'sanitize_callback' => [ $this->billing_address_schema, 'sanitize_callback' ],
+					'validate_callback' => [ $this->billing_address_schema, 'validate_callback' ],
+				],
+				'required'    => true,
 			],
-			'shipping_address' => [
+			'shipping_address'  => [
 				'description' => __( 'Shipping address.', 'woocommerce' ),
 				'type'        => 'object',
 				'context'     => [ 'view', 'edit' ],
 				'properties'  => $this->shipping_address_schema->get_properties(),
+				'arg_options' => [
+					'sanitize_callback' => [ $this->shipping_address_schema, 'sanitize_callback' ],
+					'validate_callback' => [ $this->shipping_address_schema, 'validate_callback' ],
+				],
+				'required'    => true,
 			],
-			'payment_method'   => [
+			'payment_method'    => [
 				'description' => __( 'The ID of the payment method being used to process the payment.', 'woocommerce' ),
 				'type'        => 'string',
 				'context'     => [ 'view', 'edit' ],
+				'enum'        => wc()->payment_gateways->get_payment_gateway_ids(),
 			],
-			'create_account'   => [
+			'create_account'    => [
 				'description' => __( 'Whether to create a new user account as part of order processing.', 'woocommerce' ),
 				'type'        => 'boolean',
 				'context'     => [ 'view', 'edit' ],
 			],
-			'payment_result'   => [
+			'payment_result'    => [
 				'description' => __( 'Result of payment processing, or false if not yet processed.', 'woocommerce' ),
 				'type'        => 'object',
 				'context'     => [ 'view', 'edit' ],
@@ -133,6 +155,7 @@ class CheckoutSchema extends AbstractSchema {
 					],
 				],
 			],
+			self::EXTENDING_KEY => $this->get_extended_schema( self::IDENTIFIER ),
 		];
 	}
 
@@ -155,19 +178,20 @@ class CheckoutSchema extends AbstractSchema {
 	 */
 	protected function get_checkout_response( \WC_Order $order, PaymentResult $payment_result = null ) {
 		return [
-			'order_id'         => $order->get_id(),
-			'status'           => $order->get_status(),
-			'order_key'        => $order->get_order_key(),
-			'customer_note'    => $order->get_customer_note(),
-			'customer_id'      => $order->get_customer_id(),
-			'billing_address'  => $this->billing_address_schema->get_item_response( $order ),
-			'shipping_address' => $this->shipping_address_schema->get_item_response( $order ),
-			'payment_method'   => $order->get_payment_method(),
-			'payment_result'   => [
+			'order_id'          => $order->get_id(),
+			'status'            => $order->get_status(),
+			'order_key'         => $order->get_order_key(),
+			'customer_note'     => $order->get_customer_note(),
+			'customer_id'       => $order->get_customer_id(),
+			'billing_address'   => $this->billing_address_schema->get_item_response( $order ),
+			'shipping_address'  => $this->shipping_address_schema->get_item_response( $order ),
+			'payment_method'    => $order->get_payment_method(),
+			'payment_result'    => [
 				'payment_status'  => $payment_result->status,
 				'payment_details' => $this->prepare_payment_details_for_response( $payment_result->payment_details ),
 				'redirect_url'    => $payment_result->redirect_url,
 			],
+			self::EXTENDING_KEY => $this->get_extended_data( self::IDENTIFIER ),
 		];
 	}
 

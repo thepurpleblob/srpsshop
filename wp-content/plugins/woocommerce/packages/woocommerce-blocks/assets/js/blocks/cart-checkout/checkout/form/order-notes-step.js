@@ -7,31 +7,29 @@ import {
 	useCheckoutContext,
 	useShippingDataContext,
 } from '@woocommerce/base-context';
-import PropTypes from 'prop-types';
+import { useCheckoutSubmit } from '@woocommerce/base-context/hooks';
 
 /**
  * Internal dependencies
  */
 import CheckoutOrderNotes from './order-notes';
 
-const OrderNotesStep = ( { showOrderNotes } ) => {
+const OrderNotesStep = () => {
 	const { needsShipping } = useShippingDataContext();
-	const {
-		isProcessing: checkoutIsProcessing,
-		orderNotes,
-		dispatchActions,
-	} = useCheckoutContext();
+	const { orderNotes, dispatchActions } = useCheckoutContext();
+	const { isDisabled } = useCheckoutSubmit();
 	const { setOrderNotes } = dispatchActions;
 
-	if ( ! showOrderNotes ) {
-		return null;
-	}
-
 	return (
-		<FormStep id="order-notes" showStepNumber={ false }>
+		<FormStep
+			id="order-notes"
+			showStepNumber={ false }
+			className="wc-block-checkout__order-notes"
+			disabled={ isDisabled }
+		>
 			<CheckoutOrderNotes
-				disabled={ checkoutIsProcessing }
 				onChange={ setOrderNotes }
+				disabled={ isDisabled }
 				placeholder={
 					needsShipping
 						? __(
@@ -47,10 +45,6 @@ const OrderNotesStep = ( { showOrderNotes } ) => {
 			/>
 		</FormStep>
 	);
-};
-
-OrderNotesStep.propTypes = {
-	showOrderNotes: PropTypes.bool.isRequired,
 };
 
 export default OrderNotesStep;

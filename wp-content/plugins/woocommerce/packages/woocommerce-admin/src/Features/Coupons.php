@@ -7,8 +7,9 @@
 
 namespace Automattic\WooCommerce\Admin\Features;
 
+use Automattic\WooCommerce\Admin\Features\Features;
 use Automattic\WooCommerce\Admin\Loader;
-use Automattic\WooCommerce\Admin\Notes\WC_Admin_Notes_Coupon_Page_Moved;
+use Automattic\WooCommerce\Admin\Notes\CouponPageMoved;
 use Automattic\WooCommerce\Admin\PageController;
 
 /**
@@ -44,7 +45,7 @@ class Coupons {
 		}
 
 		// If the main marketing feature is disabled, don't modify coupon behavior.
-		if ( ! Loader::is_feature_enabled( 'marketing' ) ) {
+		if ( ! Features::is_enabled( 'marketing' ) ) {
 			return;
 		}
 
@@ -53,7 +54,7 @@ class Coupons {
 			return;
 		}
 
-		( new WC_Admin_Notes_Coupon_Page_Moved() )->init();
+		( new CouponPageMoved() )->init();
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'maybe_add_marketing_coupon_script' ) );
 		add_action( 'woocommerce_register_post_type_shop_coupon', array( $this, 'move_coupons' ) );
@@ -128,10 +129,13 @@ class Coupons {
 			Loader::get_file_version( 'css' )
 		);
 
+		$script_assets_filename = Loader::get_script_asset_filename( 'wp-admin-scripts', 'marketing-coupons' );
+		$script_assets          = require WC_ADMIN_ABSPATH . WC_ADMIN_DIST_JS_FOLDER . 'wp-admin-scripts/' . $script_assets_filename;
+
 		wp_enqueue_script(
 			'wc-admin-marketing-coupons',
 			Loader::get_url( 'wp-admin-scripts/marketing-coupons', 'js' ),
-			array( 'wp-i18n', 'wp-data', 'wp-element', 'moment', 'wp-api-fetch', WC_ADMIN_APP ),
+			array_merge( array( WC_ADMIN_APP ), $script_assets ['dependencies'] ),
 			Loader::get_file_version( 'js' ),
 			true
 		);

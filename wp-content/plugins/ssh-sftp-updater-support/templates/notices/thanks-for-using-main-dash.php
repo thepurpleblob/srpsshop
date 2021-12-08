@@ -22,14 +22,6 @@
 		</p>
 		
 		<p>
-			<?php printf(__('%s Simple and secure logins with a wave of your phone.', 'ssh-sftp-updater-support'), '<strong>'.$ssh_sftp_updater_support->ssh_sftp_updater_support_url('https://getkeyy.com/', 'Keyy').': </strong>'); ?>
-		</p>
-
-		<p>
-			<?php printf(__('%s Easily create beautifully-designed sliders with the #1-most installed WP slider plugin.', 'ssh-sftp-updater-support'), '<strong>'.$ssh_sftp_updater_support->ssh_sftp_updater_support_url('https://www.metaslider.com', 'MetaSlider').': </strong>'); ?>
-		</p>
-		
-		<p>
 			<?php '<strong>'.__('More quality plugins', 'ssh-sftp-updater-support').': </strong>';?>
 			<strong><?php $ssh_sftp_updater_support->ssh_sftp_updater_support_url('https://www.simbahosting.co.uk/s3/shop/', __('Premium WooCommerce extensions', 'ssh-sftp-updater-support')); ?></strong> | <strong><?php $ssh_sftp_updater_support->ssh_sftp_updater_support_url('https://profiles.wordpress.org/davidanderson#content-plugins', __('Other useful plugins', 'ssh-sftp-updater-support')); ?></a></strong>		
 		</p>

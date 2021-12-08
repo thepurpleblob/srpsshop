@@ -2,25 +2,16 @@
  * External dependencies
  */
 import { __ } from '@wordpress/i18n';
-import {
-	AddressForm,
-	FormStep,
-} from '@woocommerce/base-components/cart-checkout';
-import { useCheckoutContext } from '@woocommerce/base-context';
+import { FormStep } from '@woocommerce/base-components/cart-checkout';
+import { useCheckoutSubmit } from '@woocommerce/base-context/hooks';
 import PropTypes from 'prop-types';
 
-const BillingFieldsStep = ( {
-	addressFieldsConfig,
-	billingFields,
-	defaultAddressFields,
-	setBillingFields,
-} ) => {
-	const { isProcessing: checkoutIsProcessing } = useCheckoutContext();
-
+const BillingFieldsStep = ( { children } ) => {
+	const { isDisabled } = useCheckoutSubmit();
 	return (
 		<FormStep
 			id="billing-fields"
-			disabled={ checkoutIsProcessing }
+			disabled={ isDisabled }
 			className="wc-block-checkout__billing-fields"
 			title={ __( 'Billing address', 'woocommerce' ) }
 			description={ __(
@@ -28,23 +19,13 @@ const BillingFieldsStep = ( {
 				'woocommerce'
 			) }
 		>
-			<AddressForm
-				id="billing"
-				onChange={ setBillingFields }
-				type="billing"
-				values={ billingFields }
-				fields={ Object.keys( defaultAddressFields ) }
-				fieldConfig={ addressFieldsConfig }
-			/>
+			{ children }
 		</FormStep>
 	);
 };
 
 BillingFieldsStep.propTypes = {
-	addressFieldsConfig: PropTypes.object.isRequired,
-	billingFields: PropTypes.object.isRequired,
-	defaultAddressFields: PropTypes.object.isRequired,
-	setBillingFields: PropTypes.func.isRequired,
+	children: PropTypes.node.isRequired,
 };
 
 export default BillingFieldsStep;

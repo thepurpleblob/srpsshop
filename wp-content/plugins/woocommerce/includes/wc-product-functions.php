@@ -492,6 +492,19 @@ add_action( 'woocommerce_scheduled_sales', 'wc_scheduled_sales' );
  * @return array
  */
 function wc_get_attachment_image_attributes( $attr ) {
+	/*
+	 * If the user can manage woocommerce, allow them to
+	 * see the image content.
+	 */
+	if ( current_user_can( 'manage_woocommerce' ) ) {
+		return $attr;
+	}
+
+	/*
+	 * If the user does not have the right capabilities,
+	 * filter out the image source and replace with placeholder
+	 * image.
+	 */
 	if ( isset( $attr['src'] ) && strstr( $attr['src'], 'woocommerce_uploads/' ) ) {
 		$attr['src'] = wc_placeholder_img_src();
 
@@ -511,7 +524,19 @@ add_filter( 'wp_get_attachment_image_attributes', 'wc_get_attachment_image_attri
  * @return array
  */
 function wc_prepare_attachment_for_js( $response ) {
+	/*
+	 * If the user can manage woocommerce, allow them to
+	 * see the image content.
+	 */
+	if ( current_user_can( 'manage_woocommerce' ) ) {
+		return $response;
+	}
 
+	/*
+	 * If the user does not have the right capabilities,
+	 * filter out the image source and replace with placeholder
+	 * image.
+	 */
 	if ( isset( $response['url'] ) && strstr( $response['url'], 'woocommerce_uploads/' ) ) {
 		$response['full']['url'] = wc_placeholder_img_src();
 		if ( isset( $response['sizes'] ) ) {
@@ -651,7 +676,7 @@ function wc_get_product_id_by_sku( $sku ) {
 }
 
 /**
- * Get attibutes/data for an individual variation from the database and maintain it's integrity.
+ * Get attributes/data for an individual variation from the database and maintain it's integrity.
  *
  * @since  2.4.0
  * @param  int $variation_id Variation ID.
@@ -949,7 +974,7 @@ function wc_get_product_term_ids( $product_id, $taxonomy ) {
  * @since  3.0.0
  * @param  WC_Product $product WC_Product object.
  * @param  array      $args Optional arguments to pass product quantity and price.
- * @return float
+ * @return float|string Price with tax included, or an empty string if price calculation failed.
  */
 function wc_get_price_including_tax( $product, $args = array() ) {
 	$args = wp_parse_args(
@@ -1033,7 +1058,7 @@ function wc_get_price_including_tax( $product, $args = array() ) {
  * @since  3.0.0
  * @param  WC_Product $product WC_Product object.
  * @param  array      $args Optional arguments to pass product quantity and price.
- * @return float
+ * @return float|string Price with tax excluded, or an empty string if price calculation failed.
  */
 function wc_get_price_excluding_tax( $product, $args = array() ) {
 	$args = wp_parse_args(

@@ -4,11 +4,16 @@
 
 .wc-block-checkout__sidebar {
 	.wc-block-components-product-name {
+		display: block;
 		color: inherit;
-		padding-right: $gap-small;
 		flex-grow: 1;
 		// Required by IE11.
 		flex-basis: 0;
+	}
+	.wc-block-components-totals-taxes,
+	.wc-block-components-totals-footer-item {
+		margin: 0;
+		padding: 0;
 	}
 }
 
@@ -16,14 +21,11 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin: 0 0 $gap-large*2;
-	padding: 0 0 0 $gap-larger;
 
 	.wc-block-components-checkout-place-order-button {
 		width: 50%;
 		padding: 1em;
 		height: auto;
-		margin-left: auto;
 
 		.wc-block-components-button__text {
 			line-height: 24px;
@@ -141,13 +143,14 @@
 	}
 
 	.wc-block-checkout__sidebar {
-		margin-bottom: $gap-largest;
+		margin-bottom: $gap-large;
 		order: 0;
 	}
 }
 
 .is-large {
 	.wc-block-checkout__actions {
-		padding-right: 36px;
+		@include with-translucent-border(1px 0 0);
+		padding-top: em($gap-large);
 	}
 }

@@ -3,7 +3,7 @@
 Plugin Name: SSH SFTP Updater Support
 Plugin URI: https://wordpress.org/plugins/ssh-sftp-updater-support/
 Description: Update your WordPress blog / plugins via SFTP without libssh2
-Version: 0.8.2
+Version: 0.8.4
 Author: TerraFrost, David Anderson + Team Updraft
 Author URI: https://updraftplus.com/
 */
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) die('No direct access allowed');
 
 define('SSH_SFTP_UPDATER_SUPPORT_MAIN_PATH', plugin_dir_path(__FILE__));
 define('SSH_SFTP_UPDATER_SUPPORT_BASENAME', plugin_basename(__FILE__));
-define('SSH_SFTP_UPDATER_SUPPORT_VERSION', '0.8.2');
+define('SSH_SFTP_UPDATER_SUPPORT_VERSION', '0.8.4');
 define('SSH_SFTP_UPDATER_SUPPORT_URL', plugin_dir_url(__FILE__));
 // see http://adambrown.info/p/wp_hooks/hook/<filter name>
 add_filter('filesystem_method', 'phpseclib_filesystem_method', 10, 2); // since 2.6 - WordPress will ignore the ssh option if the php ssh extension is not loaded
@@ -144,13 +144,13 @@ function phpseclib_request_filesystem_credentials($value, $form_post, $type = ''
 <script type="text/javascript">
 <!--
 jQuery(function($){
-	jQuery("#ssh").click(function () {
+	jQuery("#ssh").on('click', function () {
 		jQuery(".ssh_keys").show();
 	});
-	jQuery("#ftp, #ftps").click(function () {
+	jQuery("#ftp, #ftps").on('click', function () {
 		jQuery(".ssh_keys").hide();
 	});
-	jQuery("#private_key_file").change(function (event) {
+	jQuery("#private_key_file").on('change', function (event) {
 		if (window.File && window.FileReader) {
 			var reader = new FileReader();
 			reader.onload = function(file) {
@@ -159,16 +159,16 @@ jQuery(function($){
 			reader.readAsBinaryString(event.target.files[0]);
 		}
 	});
-	jQuery("form").submit(function () {
+	jQuery("form").on('submit', function () {
 		if(typeof(Storage)!=="undefined") {
 			localStorage.privateKeyFile = jQuery("#private_key").val();
 		}
-		jQuery("#private_key_file").attr("disabled", "disabled");
+		jQuery("#private_key_file").prop('disabled', true);
 	});
 	if(typeof(Storage)!=="undefined" && localStorage.privateKeyFile) {
 		jQuery("#private_key").val(localStorage.privateKeyFile);
 	}
-	jQuery('form input[value=""]:first').focus();
+	jQuery('form input[value=""]:first').trigger('focus');
 });
 -->
 </script>

@@ -48,6 +48,16 @@ class GetRuleProcessor {
 				return new OnboardingProfileRuleProcessor();
 			case 'is_ecommerce':
 				return new IsEcommerceRuleProcessor();
+			case 'base_location_country':
+				return new BaseLocationCountryRuleProcessor();
+			case 'base_location_state':
+				return new BaseLocationStateRuleProcessor();
+			case 'note_status':
+				return new NoteStatusRuleProcessor();
+			case 'option':
+				return new OptionRuleProcessor();
+			case 'wca_updated':
+				return new WooCommerceAdminUpdatedRuleProcessor();
 		}
 
 		return new FailRuleProcessor();

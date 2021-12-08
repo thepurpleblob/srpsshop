@@ -16,7 +16,7 @@ import './style.scss';
  *
  * @param {Object} props Incoming props for the component.
  * @param {string} props.className CSS class used.
- * @param {function():any} props.onChange Function called when inputs change.
+ * @param {function(string):any} props.onChange Function called when inputs change.
  * @param {Array} props.options Options for list.
  * @param {Array} props.checked Which items are checked.
  * @param {boolean} props.isLoading If loading or not.
@@ -58,7 +58,7 @@ const CheckboxList = ( {
 						} }
 						aria-expanded={ false }
 						aria-label={ sprintf(
-							/* Translators: %s is referring the remaining count of options */
+							/* translators: %s is referring the remaining count of options */
 							_n(
 								'Show %s more option',
 								'Show %s more options',
@@ -69,7 +69,7 @@ const CheckboxList = ( {
 						) }
 					>
 						{ sprintf(
-							// translators: %s number of options to reveal.
+							/* translators: %s number of options to reveal. */
 							_n(
 								'Show %s more',
 								'Show %s more',
@@ -110,7 +110,7 @@ const CheckboxList = ( {
 		const optionCount = options.length;
 		const shouldTruncateOptions = optionCount > limit + 5;
 		return (
-			<Fragment>
+			<>
 				{ options.map( ( option, index ) => (
 					<Fragment key={ option.value }>
 						<li
@@ -138,10 +138,11 @@ const CheckboxList = ( {
 					</Fragment>
 				) ) }
 				{ shouldTruncateOptions && renderedShowLess }
-			</Fragment>
+			</>
 		);
 	}, [
 		options,
+		onChange,
 		checked,
 		showExpanded,
 		limit,

@@ -3,13 +3,10 @@
  */
 import { CART_STORE_KEY as storeKey } from '@woocommerce/block-data';
 import { dispatch } from '@wordpress/data';
-import { useStoreCart } from '@woocommerce/base-hooks';
+import { useStoreCart } from '@woocommerce/base-context/hooks';
 import { useEffect, RawHTML } from '@wordpress/element';
 import LoadingMask from '@woocommerce/base-components/loading-mask';
-import {
-	ValidationContextProvider,
-	CartProvider,
-} from '@woocommerce/base-context';
+import { ValidationContextProvider } from '@woocommerce/base-context';
 import {
 	dispatchEvent,
 	translateJQueryEventToNative,
@@ -82,9 +79,7 @@ const Block = ( { emptyCart, attributes, scrollToTop } ) => {
 			) : (
 				<LoadingMask showSpinner={ true } isLoading={ cartIsLoading }>
 					<ValidationContextProvider>
-						<CartProvider>
-							<FullCart attributes={ attributes } />
-						</CartProvider>
+						<FullCart attributes={ attributes } />
 					</ValidationContextProvider>
 				</LoadingMask>
 			) }

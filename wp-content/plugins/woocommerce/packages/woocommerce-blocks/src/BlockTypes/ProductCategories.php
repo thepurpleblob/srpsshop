@@ -31,9 +31,9 @@ class ProductCategories extends AbstractDynamicBlock {
 	 *
 	 * @return array
 	 */
-	protected function get_attributes() {
+	protected function get_block_type_attributes() {
 		return array_merge(
-			parent::get_attributes(),
+			parent::get_block_type_attributes(),
 			array(
 				'align'          => $this->get_schema_align(),
 				'className'      => $this->get_schema_string(),
@@ -49,15 +49,15 @@ class ProductCategories extends AbstractDynamicBlock {
 	/**
 	 * Render the Product Categories List block.
 	 *
-	 * @param array  $attributes Block attributes. Default empty array.
-	 * @param string $content    Block content. Default empty string.
+	 * @param array  $attributes Block attributes.
+	 * @param string $content    Block content.
 	 * @return string Rendered block type output.
 	 */
-	public function render( $attributes = array(), $content = '' ) {
+	protected function render( $attributes, $content ) {
 		$uid        = uniqid( 'product-categories-' );
 		$categories = $this->get_categories( $attributes );
 
-		if ( ! $categories ) {
+		if ( empty( $categories ) ) {
 			return '';
 		}
 
@@ -129,8 +129,18 @@ class ProductCategories extends AbstractDynamicBlock {
 			]
 		);
 
-		if ( ! $categories ) {
+		if ( ! is_array( $categories ) || empty( $categories ) ) {
 			return [];
+		}
+
+		// This ensures that no categories with a product count of 0 is rendered.
+		if ( ! $attributes['hasEmpty'] ) {
+			$categories = array_filter(
+				$categories,
+				function( $category ) {
+					return 0 !== $category->count;
+				}
+			);
 		}
 
 		return $hierarchical ? $this->build_category_tree( $categories ) : $categories;
@@ -294,16 +304,14 @@ class ProductCategories extends AbstractDynamicBlock {
 		foreach ( $categories as $category ) {
 			$output .= '
 				<li class="wc-block-product-categories-list-item">
-					<a href="' . esc_attr( get_term_link( $category->term_id, 'product_cat' ) ) . '">
-						' . $this->get_image_html( $category, $attributes ) . esc_html( $category->name ) . '
-					</a>
+					<a href="' . esc_attr( get_term_link( $category->term_id, 'product_cat' ) ) . '">' . $this->get_image_html( $category, $attributes ) . esc_html( $category->name ) . '</a>
 					' . $this->getCount( $category, $attributes ) . '
 					' . ( ! empty( $category->children ) ? $this->renderList( $category->children, $attributes, $uid, $depth + 1 ) : '' ) . '
 				</li>
 			';
 		}
 
-		return $output;
+		return preg_replace( '/\r|\n/', '', $output );
 	}
 
 	/**

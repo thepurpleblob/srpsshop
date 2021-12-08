@@ -28,12 +28,10 @@ if ( ! class_exists( 'Storefront' ) ) :
 			add_action( 'wp_enqueue_scripts', array( $this, 'scripts' ), 10 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'child_scripts' ), 30 ); // After WooCommerce.
 			add_action( 'enqueue_block_assets', array( $this, 'block_assets' ) );
-			add_action( 'enqueue_block_editor_assets', array( $this, 'block_editor_assets' ) );
 			add_filter( 'body_class', array( $this, 'body_classes' ) );
 			add_filter( 'wp_page_menu_args', array( $this, 'page_menu_args' ) );
 			add_filter( 'navigation_markup_template', array( $this, 'navigation_markup_template' ) );
 			add_action( 'enqueue_embed_scripts', array( $this, 'print_embed_styles' ) );
-			add_filter( 'block_editor_settings', array( $this, 'custom_editor_settings' ), 10, 2 );
 		}
 
 		/**
@@ -345,7 +343,6 @@ if ( ! class_exists( 'Storefront' ) ) :
 			$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
 			wp_enqueue_script( 'storefront-navigation', get_template_directory_uri() . '/assets/js/navigation' . $suffix . '.js', array(), $storefront_version, true );
-			wp_enqueue_script( 'storefront-skip-link-focus-fix', get_template_directory_uri() . '/assets/js/skip-link-focus-fix' . $suffix . '.js', array(), '20130115', true );
 
 			if ( has_nav_menu( 'handheld' ) ) {
 				$storefront_l10n = array(
@@ -363,8 +360,6 @@ if ( ! class_exists( 'Storefront' ) ) :
 			if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 				wp_enqueue_script( 'comment-reply' );
 			}
-
-			wp_enqueue_script( 'jquery-pep', get_template_directory_uri() . '/assets/js/vendor/pep.min.js', array(), '0.4.3', true );
 		}
 
 		/**
@@ -402,19 +397,6 @@ if ( ! class_exists( 'Storefront' ) ) :
 			// Styles.
 			wp_enqueue_style( 'storefront-gutenberg-blocks', get_template_directory_uri() . '/assets/css/base/gutenberg-blocks.css', '', $storefront_version );
 			wp_style_add_data( 'storefront-gutenberg-blocks', 'rtl', 'replace' );
-		}
-
-		/**
-		 * Enqueue supplemental block editor assets.
-		 *
-		 * @since 2.4.0
-		 */
-		public function block_editor_assets() {
-			global $storefront_version;
-
-			// JS.
-			$suffix = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
-			wp_enqueue_script( 'storefront-editor', get_template_directory_uri() . '/assets/js/editor' . $suffix . '.js', array( 'wp-data', 'wp-dom-ready', 'wp-edit-post' ), $storefront_version, true );
 		}
 
 		/**
@@ -493,26 +475,6 @@ if ( ! class_exists( 'Storefront' ) ) :
 			}
 
 			return $classes;
-		}
-
-		/**
-		 * Adds a custom parameter to the editor settings that is used
-		 * to track whether the main sidebar has widgets.
-		 *
-		 * @since 2.4.3
-		 * @param array   $settings Default editor settings.
-		 * @param WP_Post $post Post being edited.
-		 *
-		 * @return array Filtered block editor settings.
-		 */
-		public function custom_editor_settings( $settings, $post ) {
-			$settings['mainSidebarActive'] = false;
-
-			if ( is_active_sidebar( 'sidebar-1' ) ) {
-				$settings['mainSidebarActive'] = true;
-			}
-
-			return $settings;
 		}
 
 		/**

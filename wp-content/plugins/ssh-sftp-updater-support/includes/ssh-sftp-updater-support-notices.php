@@ -68,28 +68,6 @@ class SSH_SFTP_Updater_Support_Notices extends Updraft_Notices_1_0 {
 				'supported_positions' => $this->anywhere,
 				'validity_function' => 'is_wpo_installed',
 			),
-			'keyy' => array(
-				'prefix' => '',
-				'title' => 'Keyy: Instant and secure logon with a wave of your phone',
-				'text' => __("Find out more about our revolutionary new WordPress plugin.", "ssh-sftp-updater-support"),
-				'button_link' => 'https://getkeyy.com/',
-				'button_meta' => 'keyy',
-				'image' => 'notices/keyy_logo.png',
-				'dismiss_time' => 'dismiss_page_notice_until',
-				'supported_positions' => $this->anywhere,
-				'validity_function' => 'is_keyy_installed',
-			),			
-			'meta-slider' => array(
-				'prefix' => '',
-				'title' => __("MetaSlider: the world's #1 slider plugin from the makers of SSH SFTP Updater Support", "ssh-sftp-updater-support"),
-				'text' => __("With MetaSlider, you can easily add style and flare with beautifully-designed sliders.", "ssh-sftp-updater-support"),
-				'button_link' => 'https://metaslider.com',
-				'button_meta' => 'metaslider',
-				'image' => 'notices/metaslider_logo.png',
-				'dismiss_time' => 'dismiss_page_notice_until',
-				'supported_positions' => $this->anywhere,
-				'validity_function' => 'is_metaslider_installed',
-			),
 			
 		);
 
@@ -131,17 +109,6 @@ class SSH_SFTP_Updater_Support_Notices extends Updraft_Notices_1_0 {
 	}
 
 	/**
-	 * This method will call the parent is_plugin_installed and pass in the product keyy to check if that plugin is installed if it is then we shouldn't display the notice
-	 *
-	 * @param  string  $product             the plugin slug
-	 * @param  boolean $also_require_active a bool to indicate if the plugin should also be active
-	 * @return boolean                      a bool to indicate if the notice should be displayed or not
-	 */
-	protected function is_keyy_installed($product = 'keyy', $also_require_active = false) {
-		return parent::is_plugin_installed($product, $also_require_active);
-	}
-
-	/**
 	 * This method will call the is premium function in the SSH_SFTP_Updater_Support_Notices object to check if this install is premium and if it is we won't display the notice
 	 *
 	 * @return boolean a bool to indicate if we should display the notice or not
@@ -149,19 +116,7 @@ class SSH_SFTP_Updater_Support_Notices extends Updraft_Notices_1_0 {
 	protected function is_wpo_installed($product = 'wp-optimize', $also_require_active = false) {
 		return parent::is_plugin_installed($product, $also_require_active);
 	}
-
-	/**
-	 * This method will check to see if Meta Slider plugin is installed.
-	 *
-	 * @param  String  $product			    the plugin slug
-	 * @param  boolean $also_require_active a bool to indicate if the plugin should be active or not
-	 * @return boolean					    a bool to indicate if the notice should be displayed or not
-	 */
-	protected function is_metaslider_installed($product = 'ml-slider', $also_require_active = false) {
-		return parent::is_plugin_installed($product, $also_require_active);
-	}
-
-
+	
 	/**
 	 * This method calls the parent verson and will work out if the user is using a non english language and if so returns true so that they can see the translation advert.
 	 *

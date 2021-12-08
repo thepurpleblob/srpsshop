@@ -41,12 +41,8 @@
 						$button_text = __('Find out more.', 'ssh-sftp-updater-support');
 					} elseif ('ssh-sftp-updater-support' == $button_meta) {
 						$button_text = __('Find out more.', 'ssh-sftp-updater-support');
-					} elseif ('keyy' == $button_meta) {
-						$button_text = __('Get Keyy', 'ssh-sftp-updater-support');
 					} elseif ('wp-optimize' == $button_meta) {
 						$button_text = __('Get WP-Optimize', 'ssh-sftp-updater-support');
-					} elseif ('metaslider' == $button_meta) {
-						$button_text = __('Get MetaSlider', 'ssh-sftp-updater-support');
 					} 
 					$ssh_sftp_updater_support->ssh_sftp_updater_support_url($button_link, $button_text, null, 'class="updraft_notice_link"');
 					}

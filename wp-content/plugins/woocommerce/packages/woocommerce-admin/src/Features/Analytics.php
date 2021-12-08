@@ -8,11 +8,16 @@ namespace Automattic\WooCommerce\Admin\Features;
 
 use Automattic\WooCommerce\Admin\Loader;
 use Automattic\WooCommerce\Admin\API\Reports\Cache;
+use Automattic\WooCommerce\Admin\Features\Features;
 
 /**
  * Contains backend logic for the Analytics feature.
  */
 class Analytics {
+	/**
+	 * Option name used to toggle this feature.
+	 */
+	const TOGGLE_OPTION_NAME = 'woocommerce_analytics_enabled';
 	/**
 	 * Clear cache tool identifier.
 	 */
@@ -39,10 +44,58 @@ class Analytics {
 	 * Hook into WooCommerce.
 	 */
 	public function __construct() {
+		add_filter( 'woocommerce_settings_features', array( $this, 'add_feature_toggle' ) );
+		add_action( 'update_option_' . self::TOGGLE_OPTION_NAME, array( $this, 'reload_page_on_toggle' ), 10, 2 );
+
+		if ( ! Features::is_enabled( 'analytics' ) ) {
+			return;
+		}
+
 		add_filter( 'woocommerce_component_settings_preload_endpoints', array( $this, 'add_preload_endpoints' ) );
 		add_filter( 'woocommerce_admin_get_user_data_fields', array( $this, 'add_user_data_fields' ) );
 		add_action( 'admin_menu', array( $this, 'register_pages' ) );
 		add_filter( 'woocommerce_debug_tools', array( $this, 'register_cache_clear_tool' ) );
+	}
+
+	/**
+	 * Add the feature toggle to the features settings.
+	 *
+	 * @param array $features Feature sections.
+	 * @return array
+	 */
+	public static function add_feature_toggle( $features ) {
+		$description = __(
+			'Enables WooCommerce Analytics',
+			'woocommerce'
+		);
+
+		$features[] = array(
+			'title'   => __( 'Analytics', 'woocommerce' ),
+			'desc'    => $description,
+			'id'      => self::TOGGLE_OPTION_NAME,
+			'type'    => 'checkbox',
+			'default' => 'yes',
+			'class'   => '',
+		);
+
+		return $features;
+	}
+
+	/**
+	 * Reloads the page when the option is toggled to make sure all Analytics features are loaded.
+	 *
+	 * @param string $old_value Old value.
+	 * @param string $value     New value.
+	 */
+	public static function reload_page_on_toggle( $old_value, $value ) {
+		if ( $old_value === $value ) {
+			return;
+		}
+
+		if ( isset( $_SERVER['REQUEST_URI'] ) ) {
+			wp_safe_redirect( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+			exit();
+		}
 	}
 
 	/**
@@ -52,7 +105,9 @@ class Analytics {
 	 * @return array
 	 */
 	public function add_preload_endpoints( $endpoints ) {
-		$endpoints['countries'] = '/wc-analytics/data/countries';
+		$endpoints['countries']             = '/wc-analytics/data/countries';
+		$endpoints['performanceIndicators'] = '/wc-analytics/reports/performance-indicators/allowed';
+		$endpoints['leaderboards']          = '/wc-analytics/leaderboards/allowed';
 		return $endpoints;
 	}
 
@@ -74,6 +129,10 @@ class Analytics {
 				'revenue_report_columns',
 				'taxes_report_columns',
 				'variations_report_columns',
+				'dashboard_sections',
+				'dashboard_chart_type',
+				'dashboard_chart_interval',
+				'dashboard_leaderboard_rows',
 			)
 		);
 	}
@@ -98,7 +157,7 @@ class Analytics {
 			'button'   => __( 'Clear', 'woocommerce' ),
 			'desc'     => sprintf(
 				/* translators: 1: opening link tag, 2: closing tag */
-				'This tool will reset the cached values used in WooCommerce Analytics. If numbers still look off, try %1$sReimporting Historical Data%2$s.',
+				__( 'This tool will reset the cached values used in WooCommerce Analytics. If numbers still look off, try %1$sReimporting Historical Data%2$s.', 'woocommerce' ),
 				'<a href="' . esc_url( $settings_url ) . '">',
 				'</a>'
 			),
@@ -112,68 +171,127 @@ class Analytics {
 	 * Registers report pages.
 	 */
 	public function register_pages() {
+		$report_pages = self::get_report_pages();
+		foreach ( $report_pages as $report_page ) {
+			if ( ! is_null( $report_page ) ) {
+				wc_admin_register_page( $report_page );
+			}
+		}
+	}
+
+	/**
+	 * Get report pages.
+	 */
+	public static function get_report_pages() {
+		$overview_page = array(
+			'id'       => 'woocommerce-analytics',
+			'title'    => __( 'Analytics', 'woocommerce' ),
+			'path'     => '/analytics/overview',
+			'icon'     => 'dashicons-chart-bar',
+			'position' => 56, // After WooCommerce & Product menu items.
+		);
+
 		$report_pages = array(
+			$overview_page,
 			array(
-				'id'       => 'woocommerce-analytics',
-				'title'    => __( 'Analytics', 'woocommerce' ),
+				'id'       => 'woocommerce-analytics-overview',
+				'title'    => __( 'Overview', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
 				'path'     => '/analytics/overview',
-				'path'     => '/analytics/overview',
-				'icon'     => 'dashicons-chart-bar',
-				'position' => 56, // After WooCommerce & Product menu items.
+				'nav_args' => array(
+					'order'  => 10,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-overview',
-				'title'  => __( 'Overview', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/overview',
+				'id'       => 'woocommerce-analytics-products',
+				'title'    => __( 'Products', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/products',
+				'nav_args' => array(
+					'order'  => 20,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-revenue',
-				'title'  => __( 'Revenue', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/revenue',
+				'id'       => 'woocommerce-analytics-revenue',
+				'title'    => __( 'Revenue', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/revenue',
+				'nav_args' => array(
+					'order'  => 30,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-orders',
-				'title'  => __( 'Orders', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/orders',
+				'id'       => 'woocommerce-analytics-orders',
+				'title'    => __( 'Orders', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/orders',
+				'nav_args' => array(
+					'order'  => 40,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-products',
-				'title'  => __( 'Products', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/products',
+				'id'       => 'woocommerce-analytics-variations',
+				'title'    => __( 'Variations', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/variations',
+				'nav_args' => array(
+					'order'  => 50,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-categories',
-				'title'  => __( 'Categories', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/categories',
+				'id'       => 'woocommerce-analytics-categories',
+				'title'    => __( 'Categories', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/categories',
+				'nav_args' => array(
+					'order'  => 60,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-coupons',
-				'title'  => __( 'Coupons', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/coupons',
+				'id'       => 'woocommerce-analytics-coupons',
+				'title'    => __( 'Coupons', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/coupons',
+				'nav_args' => array(
+					'order'  => 70,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-taxes',
-				'title'  => __( 'Taxes', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/taxes',
+				'id'       => 'woocommerce-analytics-taxes',
+				'title'    => __( 'Taxes', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/taxes',
+				'nav_args' => array(
+					'order'  => 80,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			array(
-				'id'     => 'woocommerce-analytics-downloads',
-				'title'  => __( 'Downloads', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/downloads',
+				'id'       => 'woocommerce-analytics-downloads',
+				'title'    => __( 'Downloads', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/downloads',
+				'nav_args' => array(
+					'order'  => 90,
+					'parent' => 'woocommerce-analytics',
+				),
 			),
 			'yes' === get_option( 'woocommerce_manage_stock' ) ? array(
-				'id'     => 'woocommerce-analytics-stock',
-				'title'  => __( 'Stock', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/stock',
+				'id'       => 'woocommerce-analytics-stock',
+				'title'    => __( 'Stock', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/stock',
+				'nav_args' => array(
+					'order'  => 100,
+					'parent' => 'woocommerce-analytics',
+				),
 			) : null,
 			array(
 				'id'     => 'woocommerce-analytics-customers',
@@ -182,20 +300,18 @@ class Analytics {
 				'path'   => '/customers',
 			),
 			array(
-				'id'     => 'woocommerce-analytics-settings',
-				'title'  => __( 'Settings', 'woocommerce' ),
-				'parent' => 'woocommerce-analytics',
-				'path'   => '/analytics/settings',
+				'id'       => 'woocommerce-analytics-settings',
+				'title'    => __( 'Settings', 'woocommerce' ),
+				'parent'   => 'woocommerce-analytics',
+				'path'     => '/analytics/settings',
+				'nav_args' => array(
+					'title'  => __( 'Analytics', 'woocommerce' ),
+					'parent' => 'woocommerce-settings',
+				),
 			),
 		);
 
-		$report_pages = apply_filters( 'woocommerce_analytics_report_menu_items', $report_pages );
-
-		foreach ( $report_pages as $report_page ) {
-			if ( ! is_null( $report_page ) ) {
-				wc_admin_register_page( $report_page );
-			}
-		}
+		return apply_filters( 'woocommerce_analytics_report_menu_items', $report_pages );
 	}
 
 	/**

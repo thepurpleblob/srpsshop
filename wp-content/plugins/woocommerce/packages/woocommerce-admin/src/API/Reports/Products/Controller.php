@@ -38,7 +38,9 @@ class Controller extends \WC_REST_Reports_Controller implements ExportableInterf
 	 * @var array
 	 */
 	protected $param_mapping = array(
-		'products' => 'product_includes',
+		'categories' => 'category_includes',
+		'products'   => 'product_includes',
+		'variations' => 'variation_includes',
 	);
 
 	/**
@@ -171,7 +173,7 @@ class Controller extends \WC_REST_Reports_Controller implements ExportableInterf
 					'type'        => 'number',
 					'readonly'    => true,
 					'context'     => array( 'view', 'edit' ),
-					'description' => __( 'Total Net Sales of all items sold.', 'woocommerce' ),
+					'description' => __( 'Total Net sales of all items sold.', 'woocommerce' ),
 				),
 				'orders_count'  => array(
 					'type'        => 'integer',
@@ -383,9 +385,9 @@ class Controller extends \WC_REST_Reports_Controller implements ExportableInterf
 	 */
 	public function get_export_columns() {
 		$export_columns = array(
-			'product_name' => __( 'Product Title', 'woocommerce' ),
+			'product_name' => __( 'Product title', 'woocommerce' ),
 			'sku'          => __( 'SKU', 'woocommerce' ),
-			'items_sold'   => __( 'Items Sold', 'woocommerce' ),
+			'items_sold'   => __( 'Items sold', 'woocommerce' ),
 			'net_revenue'  => __( 'N. Revenue', 'woocommerce' ),
 			'orders_count' => __( 'Orders', 'woocommerce' ),
 			'product_cat'  => __( 'Category', 'woocommerce' ),

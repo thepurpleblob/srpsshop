@@ -6,18 +6,22 @@ if ( ! function_exists( 'wc_admin_get_feature_config' ) ) {
 		return array(
 			'activity-panels' => true,
 			'analytics' => true,
-			'analytics-dashboard' => true,
-			'analytics-dashboard/customizable' => true,
 			'coupons' => true,
-			'devdocs' => false,
+			'customer-effort-score-tracks' => true,
+			'homescreen' => true,
 			'marketing' => true,
+			'minified-js' => false,
+			'mobile-app-banner' => true,
+			'navigation' => false,
 			'onboarding' => true,
 			'remote-inbox-notifications' => true,
+			'remote-free-extensions' => true,
+			'payment-gateway-suggestions' => true,
+			'settings' => false,
 			'shipping-label-banner' => true,
 			'store-alerts' => true,
-			'minified-js' => false,
-			'wcpay' => true,
-			'mobile-app-banner' => true,
+			'tasks' => false,
+			'transient-notices' => true,
 		);
 	}
 }

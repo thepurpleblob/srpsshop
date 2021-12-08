@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: WP Mail SMTP
- * Version: 2.5.1
+ * Version: 3.2.0
  * Requires at least: 4.9
- * Requires PHP: 5.5
+ * Requires PHP: 5.6.20
  * Plugin URI: https://wpmailsmtp.com/
  * Description: Reconfigures the <code>wp_mail()</code> function to use Gmail/Mailgun/SendGrid/SMTP instead of the default <code>mail()</code> and creates an options page to manage the settings.
  * Author: WPForms
@@ -15,7 +15,7 @@
 
 /**
  * @author    WPForms
- * @copyright WPForms, 2007-20, All Rights Reserved
+ * @copyright WPForms, 2007-21, All Rights Reserved
  * This code is released under the GPL licence version 3 or later, available here
  * https://www.gnu.org/licenses/gpl.txt
  */
@@ -46,6 +46,12 @@ define( 'WPMS_SET_RETURN_PATH', true ); // Sets $phpmailer->Sender if true, rele
 // Recommended mailers.
 define( 'WPMS_SMTPCOM_API_KEY', '' );
 define( 'WPMS_SMTPCOM_CHANNEL', '' );
+define( 'WPMS_SENDINBLUE_API_KEY', '' );
+define( 'WPMS_SENDINBLUE_DOMAIN', '' );
+
+define( 'WPMS_ZOHO_DOMAIN', '' );
+define( 'WPMS_ZOHO_CLIENT_ID', '' );
+define( 'WPMS_ZOHO_CLIENT_SECRET', '' );
 
 define( 'WPMS_PEPIPOST_API_KEY', '' );
 
@@ -84,6 +90,11 @@ if ( function_exists( 'wp_mail_smtp' ) ) {
 		 * @since 1.5.0
 		 */
 		function wp_mail_smtp_deactivate() {
+			/*
+			 * Prevent issues of WP functions not being available for other plugins that hook into
+			 * this early deactivation. GH issue #861.
+			 */
+			require_once ABSPATH . WPINC . '/pluggable.php';
 
 			deactivate_plugins( plugin_basename( __FILE__ ) );
 		}
@@ -115,6 +126,12 @@ if ( ! function_exists( 'wp_mail_smtp_check_pro_loading_allowed' ) ) {
 
 		// Search for old plugin name.
 		if ( is_plugin_active( 'wp-mail-smtp/wp_mail_smtp.php' ) ) {
+			/*
+			 * Prevent issues of WP functions not being available for other plugins that hook into
+			 * this early deactivation. GH issue #861.
+			 */
+			require_once ABSPATH . WPINC . '/pluggable.php';
+
 			// As Pro is loaded and Lite too - deactivate *silently* itself not to break older SMTP plugin.
 			deactivate_plugins( plugin_basename( __FILE__ ) );
 
@@ -205,10 +222,10 @@ if ( ! function_exists( 'wp_mail_smtp_insecure_php_version_notice' ) ) {
 }
 
 if ( ! defined( 'WPMS_PLUGIN_VER' ) ) {
-	define( 'WPMS_PLUGIN_VER', '2.5.1' );
+	define( 'WPMS_PLUGIN_VER', '3.2.0' );
 }
 if ( ! defined( 'WPMS_PHP_VER' ) ) {
-	define( 'WPMS_PHP_VER', '5.5.0' );
+	define( 'WPMS_PHP_VER', '5.6.20' );
 }
 if ( ! defined( 'WPMS_PLUGIN_FILE' ) ) {
 	define( 'WPMS_PLUGIN_FILE', __FILE__ );
